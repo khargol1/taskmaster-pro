@@ -13,6 +13,8 @@ var createTask = function (taskText, taskDate, taskList) {
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
 
+  //check due date
+  auditTask(taskLi);
 
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
@@ -98,12 +100,21 @@ $(".list-group").on("click", "span", function () {
   // swap out elements
   $(this).replaceWith(dateInput);
 
+  //enable jquery ui datepicker
+  dateInput.datepicker({
+    minDate: 1,
+    onClose: function(){
+      //when calendar is closed force a "change" event on 'dateInput"
+      $(this).trigger("change");
+    }
+  });
+
   // automatically focus on new element
   dateInput.trigger("focus");
 });
 
 // value of due date was changed
-$(".list-group").on("blur", "input[type='text']", function () {
+$(".list-group").on("change", "input[type='text']", function () {
   // get current text
   var date = $(this)
     .val()
@@ -131,6 +142,8 @@ $(".list-group").on("blur", "input[type='text']", function () {
 
   // replace input with span element
   $(this).replaceWith(taskSpan);
+
+  auditTask($(taskSpan).closest(".list-group-item"));
 });
 
 
@@ -245,3 +258,25 @@ $("#trash").droppable({
     console.log("out");
   }
 });
+
+$("#modalDueDate").datepicker({
+  minDate: 1
+});
+
+function auditTask(taskEl){
+  //get date from task element
+  let date = $(taskEl).find("span").text().trim();
+  
+
+  let time = moment(date, "L").set("hour", 17);
+  //this should print out an object for the value of the datre variable, but at 5:00pm
+  
+  $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
+
+  if(moment().isAfter(time)){
+    $(taskEl).addClass("list-group-item-danger");
+  }
+  else if(Math.abs(moment().diff(time, "day")) <= 2){
+    $(taskEl).addClass("list-group-item-warning");
+  }
+};
